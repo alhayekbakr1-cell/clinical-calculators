@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  
+  /* AdventHealth Brand Colors */
+  --advent-blue: #005d91;
+  --advent-light-blue: #00a3e0;
+  --advent-green: #7ab800;
+  --advent-teal: #004b44;
+  --advent-dark-blue: #002f56;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-advent-blue: var(--advent-blue);
+  --color-advent-lightblue: var(--advent-light-blue);
+  --color-advent-green: var(--advent-green);
+  --color-advent-teal: var(--advent-teal);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Force light colors - ignore system preference for a clean clinical look */
+:root {
+  --background: #f8fafc;
+  --foreground: #171717;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
