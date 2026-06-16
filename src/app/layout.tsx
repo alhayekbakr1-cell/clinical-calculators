@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
+import SiteFooter from "@/components/SiteFooter";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,13 +22,7 @@ export default function RootLayout({
         <AppShell>
           {children}
         </AppShell>
-        <footer className="py-6 border-t bg-white">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <p className="text-sm text-slate-500">
-              IM Resident QI Project Tracker &copy; {new Date().getFullYear()}
-            </p>
-          </div>
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );

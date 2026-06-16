@@ -6,6 +6,12 @@ export async function updateSession(request: NextRequest) {
         request,
     })
 
+    // If Supabase isn't configured (e.g. local dev / the open ECG section),
+    // skip auth entirely instead of crashing on undefined credentials.
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        return supabaseResponse
+    }
+
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

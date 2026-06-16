@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "ecg:check": "tsc src/ecg/engine/index.ts --outDir .ecgcheck --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck && node scripts/ecg_sanity.cjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
