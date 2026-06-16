@@ -43,11 +43,25 @@ function wavefront(state: ConductionState): { x: number; y: number } | null {
 
 const BLOCK = "#ef4444";
 
-export function ConductionView({ state }: { state: ConductionState }) {
+export function ConductionView({
+  state,
+  block,
+}: {
+  state: ConductionState;
+  block?: string;
+}) {
   const on = (id: string) => state.active.includes(id);
   const repol = state.phase === "repolarization";
   const plateau = state.phase === "plateau";
   const avBlocked = on("avBlock");
+
+  // Persistent conduction-block highlight (independent of the wavefront phase).
+  const rbbBlocked = !!block && block.startsWith("RBBB");
+  const lbbBlocked = block === "LBBB";
+  const lafb = !!block && block.includes("LAFB");
+  const lpfb = !!block && block.includes("LPFB");
+  const rbbStroke = rbbBlocked ? BLOCK : on("rbb") ? SPARK : "#64748b";
+  const lbbStroke = lbbBlocked ? BLOCK : on("lbb") ? SPARK : "#64748b";
 
   const atriaFill = on("ra") || on("la") ? DEPOL : "#1f2937";
   const ventFill = repol ? REPOL : on("lv") || on("rv") ? DEPOL : plateau ? DEPOL_DIM : "#1f2937";
@@ -169,17 +183,25 @@ export function ConductionView({ state }: { state: ConductionState }) {
       <path
         d={`M ${PT.bifurc.x} ${PT.bifurc.y} L ${PT.rbb.x} ${PT.rbb.y}`}
         fill="none"
-        stroke={on("rbb") ? SPARK : "#64748b"}
+        stroke={rbbStroke}
         strokeWidth={2.4}
-        filter={on("rbb") ? "url(#glow)" : undefined}
+        filter={on("rbb") || rbbBlocked ? "url(#glow)" : undefined}
       />
       <path
         d={`M ${PT.bifurc.x} ${PT.bifurc.y} L ${PT.lbb.x} ${PT.lbb.y}`}
         fill="none"
-        stroke={on("lbb") ? SPARK : "#64748b"}
+        stroke={lbbStroke}
         strokeWidth={2.4}
-        filter={on("lbb") ? "url(#glow)" : undefined}
+        filter={on("lbb") || lbbBlocked ? "url(#glow)" : undefined}
       />
+
+      {/* left anterior / posterior fascicles (off the LBB) */}
+      <line x1={120} y1={185} x2={142} y2={173} stroke={lafb ? BLOCK : "#475569"} strokeWidth={lafb ? 2.2 : 1.4} filter={lafb ? "url(#glow)" : undefined} />
+      <line x1={120} y1={185} x2={126} y2={209} stroke={lpfb ? BLOCK : "#475569"} strokeWidth={lpfb ? 2.2 : 1.4} filter={lpfb ? "url(#glow)" : undefined} />
+
+      {/* block "X" markers */}
+      {rbbBlocked && <BlockX x={86} y={176} />}
+      {lbbBlocked && <BlockX x={114} y={176} />}
 
       {/* Purkinje fans */}
       {on("purkinje") &&
@@ -201,5 +223,14 @@ export function ConductionView({ state }: { state: ConductionState }) {
         <circle cx={spark.x} cy={spark.y} r={4.5} fill={SPARK} filter="url(#glow)" />
       )}
     </svg>
+  );
+}
+
+function BlockX({ x, y }: { x: number; y: number }) {
+  return (
+    <g stroke="#fecaca" strokeWidth={2} strokeLinecap="round">
+      <line x1={x - 5} y1={y - 5} x2={x + 5} y2={y + 5} />
+      <line x1={x - 5} y1={y + 5} x2={x + 5} y2={y - 5} />
+    </g>
   );
 }

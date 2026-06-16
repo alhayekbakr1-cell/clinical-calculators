@@ -16,6 +16,7 @@ export type LabParams = {
   lvh: number;
   lvStrain: boolean;
   atrial: SinusParams['atrial'];
+  conductionBlock: SinusParams['conductionBlock'];
 };
 
 export const NORMAL_PARAMS: LabParams = {
@@ -26,6 +27,7 @@ export const NORMAL_PARAMS: LabParams = {
   lvh: 0,
   lvStrain: false,
   atrial: 'none',
+  conductionBlock: 'none',
 };
 
 export interface Module {
@@ -109,5 +111,48 @@ export const TIER1: Module[] = [
     short: 'Inferior / lateral / anterior / septal',
     note: 'Leads are grouped by the wall they view: inferior (II, III, aVF — usually RCA), lateral (I, aVL, V5, V6 — circumflex), anterior (V3, V4 — LAD) and septal (V1, V2 — LAD). Contiguous changes in one group localise ischaemia to that territory.',
     preset: { ...NORMAL_PARAMS },
+  },
+];
+
+export const TIER2: Module[] = [
+  {
+    id: 'rbbb',
+    tier: 2,
+    title: 'Right bundle branch block',
+    short: "rSR' in V1",
+    note: 'The right bundle is blocked, so the RV depolarises last by slow cell-to-cell spread — a delayed terminal rightward + anterior force. Result: wide QRS (≥120 ms), rSR′ (“rabbit ears”) in V1, and a wide slurred S wave in I and V6. Initial septal and LV forces are normal, so the first half of the QRS looks ordinary.',
+    preset: { ...NORMAL_PARAMS, conductionBlock: 'RBBB' },
+  },
+  {
+    id: 'lbbb',
+    tier: 2,
+    title: 'Left bundle branch block',
+    short: 'QS in V1, broad R in V6',
+    note: 'The left bundle is blocked, so the septum depolarises abnormally (loss of the normal septal q) and the LV activates late through a broad, slurred, often notched leftward QRS. Result: wide QRS (≥120 ms), QS or rS in V1, a broad monophasic R in I/aVL/V6, and discordant ST/T. In LBBB the usual ischaemia rules change — think Sgarbossa.',
+    preset: { ...NORMAL_PARAMS, conductionBlock: 'LBBB' },
+  },
+  {
+    id: 'lafb',
+    tier: 2,
+    title: 'Left anterior fascicular block',
+    short: 'Left axis deviation',
+    note: 'Block of the left anterior fascicle redirects LV activation, producing marked left axis deviation (about −45° to −60°) with qR in I/aVL and rS in the inferior leads, and only mild QRS widening. Confirm there is no other cause of the left axis first.',
+    preset: { ...NORMAL_PARAMS, conductionBlock: 'LAFB' },
+  },
+  {
+    id: 'lpfb',
+    tier: 2,
+    title: 'Left posterior fascicular block',
+    short: 'Right axis deviation',
+    note: 'Block of the left posterior fascicle (less common — the fascicle is broad and dual-supplied) produces right axis deviation (about +100° to +120°) with rS in I/aVL and qR in the inferior leads. It is a diagnosis of exclusion: rule out RVH and other causes of right axis.',
+    preset: { ...NORMAL_PARAMS, conductionBlock: 'LPFB' },
+  },
+  {
+    id: 'bifascicular',
+    tier: 2,
+    title: 'Bifascicular block',
+    short: 'RBBB + fascicular block',
+    note: 'RBBB plus a fascicular block: the QRS shows the RBBB pattern (rSR′ in V1) while the frontal axis is driven by the fascicle that is out — left axis with RBBB + LAFB, right axis with RBBB + LPFB. With a long PR (“trifascicular” pattern) conduction is precarious.',
+    preset: { ...NORMAL_PARAMS, conductionBlock: 'RBBB+LAFB' },
   },
 ];

@@ -72,20 +72,27 @@ export function conductionAt(model: CardiacModel, tMs: number): ConductionState 
   // --- QRS: His-Purkinje then ventricular myocardium ---
   if (t < L.qrsEnd) {
     const f = (t - L.qrsOnset) / qrsDur;
+    const b = model.block ?? '';
+    const rbbBlocked = b.startsWith('RBBB');
+    const lbbBlocked = b === 'LBBB';
     if (f < HIS_FRACTION) {
+      // The blocked bundle does not conduct down the His-Purkinje system.
+      const active = ['his', 'purkinje'];
+      if (!lbbBlocked) active.push('lbb');
+      if (!rbbBlocked) active.push('rbb');
       return {
         phase: 'hisPurkinje',
         progress: clamp01(f / HIS_FRACTION),
         label: LABELS.hisPurkinje,
-        active: ['his', 'lbb', 'rbb', 'purkinje'],
+        active,
       };
     }
-    return {
-      phase: 'ventricular',
-      progress: clamp01((f - HIS_FRACTION) / (1 - HIS_FRACTION)),
-      label: LABELS.ventricular,
-      active: ['septum', 'lv', 'rv'],
-    };
+    const vp = clamp01((f - HIS_FRACTION) / (1 - HIS_FRACTION));
+    // With a bundle block the affected ventricle depolarises late (cell-to-cell).
+    let active = ['septum', 'lv', 'rv'];
+    if (rbbBlocked) active = vp < 0.5 ? ['septum', 'lv'] : ['septum', 'lv', 'rv'];
+    else if (lbbBlocked) active = vp < 0.5 ? ['septum', 'rv'] : ['septum', 'rv', 'lv'];
+    return { phase: 'ventricular', progress: vp, label: LABELS.ventricular, active };
   }
 
   // --- ST plateau ---

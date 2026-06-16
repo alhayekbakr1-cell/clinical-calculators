@@ -57,7 +57,8 @@ export function qrsAreaVector(model: CardiacModel): Vec3 {
   let y = 0;
   let z = 0;
   for (const e of model.events) {
-    if (e.id !== 'septal' && e.id !== 'R' && e.id !== 'S') continue;
+    // Any depolarisation event (everything except P and T) is part of the QRS.
+    if (e.id === 'P' || e.id === 'T') continue;
     const area = e.magnitude * e.sigmaMs * SQRT_2PI;
     x += area * e.direction.x;
     y += area * e.direction.y;

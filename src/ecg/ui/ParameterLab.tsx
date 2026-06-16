@@ -1,7 +1,17 @@
 "use client";
 
 import type { LabParams } from "@/ecg/curriculum";
-import type { AtrialEnlargement } from "@/ecg/engine";
+import type { AtrialEnlargement, ConductionBlock } from "@/ecg/engine";
+
+const BLOCK_OPTS: { id: ConductionBlock; label: string }[] = [
+  { id: "none", label: "None" },
+  { id: "RBBB", label: "RBBB" },
+  { id: "LBBB", label: "LBBB" },
+  { id: "LAFB", label: "LAFB (left anterior)" },
+  { id: "LPFB", label: "LPFB (left posterior)" },
+  { id: "RBBB+LAFB", label: "RBBB + LAFB" },
+  { id: "RBBB+LPFB", label: "RBBB + LPFB" },
+];
 
 function Field({
   label,
@@ -184,6 +194,24 @@ export function ParameterLab({
             </button>
           ))}
         </div>
+      </Field>
+
+      <Field
+        label="Conduction block"
+        hint={params.conductionBlock !== "none" ? "Wide-QRS / fascicular pattern" : undefined}
+        hintTone="warn"
+      >
+        <select
+          value={params.conductionBlock}
+          onChange={(e) => onChange({ conductionBlock: e.target.value as ConductionBlock })}
+          className="w-full bg-slate-800 text-slate-200 text-xs font-semibold rounded px-2 py-1.5 outline-none ring-1 ring-slate-700 focus:ring-sky-500"
+        >
+          {BLOCK_OPTS.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
+            </option>
+          ))}
+        </select>
       </Field>
     </div>
   );

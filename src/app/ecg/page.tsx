@@ -16,6 +16,7 @@ import {
   type Module,
   NORMAL_PARAMS,
   TIER1,
+  TIER2,
 } from "@/ecg/curriculum";
 import { useCardiacClock } from "@/ecg/useCardiacClock";
 import { ConductionView } from "@/ecg/ui/ConductionView";
@@ -47,7 +48,7 @@ export default function EcgConsole() {
   // Deep-link a teaching scenario: /ecg?focus=<module-id>
   useEffect(() => {
     const focus = new URLSearchParams(window.location.search).get("focus");
-    const mod = focus && TIER1.find((x) => x.id === focus);
+    const mod = focus && [...TIER1, ...TIER2].find((x) => x.id === focus);
     if (mod) applyModule(mod);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -62,6 +63,7 @@ export default function EcgConsole() {
         lvh: params.lvh,
         lvStrain: params.lvStrain,
         atrial: params.atrial,
+        conductionBlock: params.conductionBlock,
       }),
     [params],
   );
@@ -152,7 +154,7 @@ export default function EcgConsole() {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
             <Card title="Conduction" subtitle={conduction.label}>
               <div className="aspect-[5/6] max-h-[320px] mx-auto">
-                <ConductionView state={conduction} />
+                <ConductionView state={conduction} block={model.block} />
               </div>
             </Card>
             <Card title="Axis vector" subtitle="Hexaxial · live projection per lead">
@@ -197,6 +199,28 @@ export default function EcgConsole() {
             ))}
           </div>
           <p className="text-[13px] text-slate-300 leading-relaxed mt-2 max-w-4xl">{note}</p>
+        </Card>
+      </div>
+
+      {/* ---- Tier-2: bundle & fascicular blocks (single beat) ---- */}
+      <div className="mt-3">
+        <Card title="Tier 2 — Bundle & fascicular blocks" subtitle="Wide-QRS and fascicular patterns; the blocked bundle lights red in the conduction view">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+            {TIER2.map((mod) => (
+              <button
+                key={mod.id}
+                onClick={() => applyModule(mod)}
+                className={`shrink-0 text-left rounded-lg px-3 py-2 w-44 ring-1 transition-colors ${
+                  activeModule === mod.id
+                    ? "bg-sky-500/15 ring-sky-500"
+                    : "bg-slate-800/40 ring-slate-800 hover:bg-slate-800"
+                }`}
+              >
+                <span className="block text-xs font-bold text-slate-200 leading-tight">{mod.title}</span>
+                <span className="block text-[10px] text-slate-400 mt-0.5">{mod.short}</span>
+              </button>
+            ))}
+          </div>
         </Card>
       </div>
 

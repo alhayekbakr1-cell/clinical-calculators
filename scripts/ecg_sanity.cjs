@@ -111,6 +111,35 @@ check('RAE: taller P in II', pAmp(rae) > pAmp(model) * 1.3, `${pAmp(model).toFix
 const lae = E.buildNormalSinus({ atrial: 'LAE' });
 check('LAE: broader P (duration up)', E.measure(lae).pDurationMs > E.measure(model).pDurationMs + 20, `${E.measure(model).pDurationMs} -> ${E.measure(lae).pDurationMs} ms`);
 
+console.log('\n--- Tier-2: bundle / fascicular blocks ---');
+const tPeakV6 = (mdl) => E.leadsAt(mdl, mdl.events.find((e) => e.id === 'T').centerMs).V6;
+
+// RBBB: wide QRS, tall terminal R' in V1, wide S in I and V6
+const rbbb = E.buildNormalSinus({ conductionBlock: 'RBBB' });
+const rbbbPk = E.qrsPeakAmplitudes(rbbb);
+const normPk = E.qrsPeakAmplitudes(model);
+check('RBBB: QRS wide (>=120 ms)', E.measure(rbbb).qrsMs >= 120, `${E.measure(rbbb).qrsMs} ms`);
+check('RBBB: tall R\' in V1', rbbbPk.V1.r > 0.6 && rbbbPk.V1.r > normPk.V1.r * 2, `V1 R ${rbbbPk.V1.r.toFixed(2)} (normal ${normPk.V1.r.toFixed(2)})`);
+check('RBBB: wide S in I and V6', rbbbPk.I.s > 0.15 && rbbbPk.V6.s > 0.15, `S I ${rbbbPk.I.s.toFixed(2)} · V6 ${rbbbPk.V6.s.toFixed(2)}`);
+check('RBBB: model carries block tag', rbbb.block === 'RBBB', `${rbbb.block}`);
+check('RBBB: axis stays roughly normal (< +85)', E.measure(rbbb).frontalAxisDeg < 85, `${E.measure(rbbb).frontalAxisDeg} deg`);
+
+// LBBB: wide QRS, QS in V1, dominant R in V6 with no q, discordant T
+const lbbb = E.buildNormalSinus({ conductionBlock: 'LBBB' });
+const lbbbPk = E.qrsPeakAmplitudes(lbbb);
+check('LBBB: QRS wide (>=140 ms)', E.measure(lbbb).qrsMs >= 140, `${E.measure(lbbb).qrsMs} ms`);
+check('LBBB: V1 net negative (QS)', lbbbPk.V1.s > lbbbPk.V1.r && lbbbPk.V1.s > 0.7, `V1 R ${lbbbPk.V1.r.toFixed(2)} vs S ${lbbbPk.V1.s.toFixed(2)}`);
+check('LBBB: dominant R in V6, little S (no q)', lbbbPk.V6.r > 0.7 && lbbbPk.V6.r > lbbbPk.V6.s * 2, `V6 R ${lbbbPk.V6.r.toFixed(2)} S ${lbbbPk.V6.s.toFixed(2)}`);
+check('LBBB: discordant (inverted) T in V6', tPeakV6(lbbb) < 0, `${tPeakV6(lbbb).toFixed(2)} mV`);
+
+// Fascicular blocks: axis deviation
+check('LAFB: left axis deviation (<= -45)', E.measure(E.buildNormalSinus({ conductionBlock: 'LAFB' })).frontalAxisDeg <= -45, `${E.measure(E.buildNormalSinus({ conductionBlock: 'LAFB' })).frontalAxisDeg} deg`);
+check('LPFB: right axis deviation (>= 100)', E.measure(E.buildNormalSinus({ conductionBlock: 'LPFB' })).frontalAxisDeg >= 100, `${E.measure(E.buildNormalSinus({ conductionBlock: 'LPFB' })).frontalAxisDeg} deg`);
+
+// Bifascicular: RBBB morphology + LAD
+const bif = E.buildNormalSinus({ conductionBlock: 'RBBB+LAFB' });
+check('RBBB+LAFB: wide QRS and left axis', E.measure(bif).qrsMs >= 120 && E.measure(bif).frontalAxisDeg <= -45, `${E.measure(bif).qrsMs} ms · ${E.measure(bif).frontalAxisDeg} deg`);
+
 // Regression: normal unchanged
 check('Regression: default still axis 54, QRS 92, QTc 400', m.frontalAxisDeg === 54 && m.qrsMs === 92 && m.qtcMs === 400);
 

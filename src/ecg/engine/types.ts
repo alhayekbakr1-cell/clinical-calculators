@@ -49,6 +49,8 @@ export interface CardiacModel {
   events: WaveEvent[];
   landmarks: CycleLandmarks;
   label: string;
+  /** Conduction block in effect (for the conduction view), e.g. 'RBBB'. */
+  block?: string;
 }
 
 /** Conduction-system phase, derived from the same timeline. */

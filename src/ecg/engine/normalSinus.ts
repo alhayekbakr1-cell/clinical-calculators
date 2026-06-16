@@ -34,6 +34,15 @@ function clamp(v: number, lo: number, hi: number): number {
 
 export type AtrialEnlargement = 'none' | 'LAE' | 'RAE' | 'biatrial';
 
+export type ConductionBlock =
+  | 'none'
+  | 'RBBB'
+  | 'LBBB'
+  | 'LAFB'
+  | 'LPFB'
+  | 'RBBB+LAFB'
+  | 'RBBB+LPFB';
+
 export interface SinusParams {
   rateBpm: number;
   prMs: number;
@@ -54,6 +63,8 @@ export interface SinusParams {
   lvStrain: boolean;
   /** Atrial enlargement pattern (P-wave morphology). */
   atrial: AtrialEnlargement;
+  /** Intraventricular conduction block (Tier-2). */
+  conductionBlock: ConductionBlock;
 }
 
 export const DEFAULT_SINUS: SinusParams = {
@@ -69,6 +80,7 @@ export const DEFAULT_SINUS: SinusParams = {
   lvh: 0,
   lvStrain: false,
   atrial: 'none',
+  conductionBlock: 'none',
 };
 
 // Base (normal) directions — the Phase-0 ground truth.
@@ -107,9 +119,27 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
   const rLvh = 1 + p.lvh * 0.95;
   const sLvh = 1 + p.lvh * 0.6;
 
+  // ---------------------------------------------------------------
+  // Intraventricular conduction blocks (Tier-2).
+  //   RBBB: a late terminal rightward + anterior force (the RV depolarises
+  //         last, cell-to-cell) -> rSR' in V1, wide slurred S in I and V6.
+  //   LBBB: loss of the normal septal q and a broad, slurred leftward QRS
+  //         -> QS in V1, broad (often notched) R in I/aVL/V6, discordant T.
+  //   LAFB / LPFB: fascicular axis shift (LAD / RAD) with mild widening.
+  // ---------------------------------------------------------------
+  const block = p.conductionBlock;
+  const hasRBBB = block === 'RBBB' || block === 'RBBB+LAFB' || block === 'RBBB+LPFB';
+  const isLBBB = block === 'LBBB';
+  const hasLAFB = block === 'LAFB' || block === 'RBBB+LAFB';
+  const hasLPFB = block === 'LPFB' || block === 'RBBB+LPFB';
+  // QRS-width target for the block (ms); overrides hyperkalaemia widening.
+  const blockQrs = isLBBB ? 150 : hasRBBB ? 140 : hasLAFB || hasLPFB ? 104 : 0;
+  // Fascicular blocks set the frontal axis (deg).
+  const blockAxis = hasLAFB ? -55 : hasLPFB ? 110 : undefined;
+
   // Effective timing
   const prMs = p.prMs + prK;
-  const qrsMs = p.qrsMs * qrsK;
+  const qrsMs = blockQrs || p.qrsMs * qrsK;
 
   const rrMs = 60000 / p.rateBpm;
   const rrSec = rrMs / 1000;
@@ -159,10 +189,10 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
   // --- Repolarisation (T) direction: strain inverts it laterally ---
   let tDir: Vec3 = { ...BASE_DIR.T };
   let tAmp = 0.45 * p.tAmplitude * tAmpK;
-  if (p.lvStrain && p.lvh > 0) {
+  if ((p.lvStrain && p.lvh > 0) || isLBBB) {
     // Discordant (opposite the main QRS): rightward, slightly superior, posterior.
     tDir = { x: -0.45, y: -0.15, z: 0.4 };
-    tAmp = 0.45 * (1 + p.lvh * 0.4);
+    tAmp = 0.45 * (1 + (isLBBB ? 0.3 : p.lvh * 0.4));
   }
 
   // --- Assemble events ---
@@ -204,21 +234,73 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
     },
   ];
 
-  // --- Axis rotation (applied to depolarisation events) ---
-  // LVH biases the axis leftward; an explicit target overrides.
+  // --- Conduction-block morphology (added before the axis rotation) ---
+  if (hasRBBB) {
+    // Initial septal + LV (R, S) stay normal; add the delayed terminal RV force.
+    events.push({
+      id: 'rbbTerm',
+      centerMs: qrsOnset + 0.82 * qrsMs,
+      sigmaMs: 0.13 * qrsMs,
+      magnitude: 0.65,
+      direction: unit({ x: -0.31, y: 0.0, z: -0.92 }), // mostly anterior, mildly right -> tall R' in V1, modest axis shift
+    });
+  }
+  if (isLBBB) {
+    // Drop the normal septal q; broaden/slur the leftward LV depolarisation.
+    events = events
+      .filter((e) => e.id !== 'septal')
+      .map((e) => {
+        if (e.id === 'R')
+          return {
+            ...e,
+            sigmaMs: e.sigmaMs * 1.7,
+            magnitude: e.magnitude * 1.15,
+            direction: unit({ x: 0.5, y: 0.35, z: 0.62 }),
+          };
+        if (e.id === 'S') return { ...e, magnitude: e.magnitude * 0.25 };
+        return e;
+      });
+    events.push({
+      id: 'lbbInit',
+      centerMs: qrsOnset + 0.12 * qrsMs,
+      sigmaMs: 0.09 * qrsMs,
+      magnitude: 0.18,
+      direction: unit({ x: 0.4, y: 0.2, z: 0.5 }), // leftward initial -> no q, V1 starts negative
+    });
+    events.push({
+      id: 'lbbNotch',
+      centerMs: qrsOnset + 0.6 * qrsMs,
+      sigmaMs: 0.12 * qrsMs,
+      magnitude: 0.6,
+      direction: unit({ x: 0.52, y: 0.3, z: 0.55 }), // notched broad leftward R
+    });
+  }
+
+  // --- Axis rotation (applied to all depolarisation events) ---
+  // A fascicular block sets the axis; otherwise LVH biases it left and an
+  // explicit target overrides.
   const lvhAxisShift = -p.lvh * 20;
   const targetAxis =
-    p.qrsAxisDeg != null ? p.qrsAxisDeg : naturalQrsAxis(events) + lvhAxisShift;
+    blockAxis != null
+      ? blockAxis
+      : p.qrsAxisDeg != null
+        ? p.qrsAxisDeg
+        : naturalQrsAxis(events) + lvhAxisShift;
   const delta = (targetAxis - naturalQrsAxis(events)) * DEG;
   if (Math.abs(delta) > 1e-6) {
     events = events.map((e) =>
-      e.id === 'septal' || e.id === 'R' || e.id === 'S'
-        ? { ...e, direction: rotateFrontal(e.direction, delta) }
-        : e,
+      e.id === 'P' || e.id === 'T'
+        ? e
+        : { ...e, direction: rotateFrontal(e.direction, delta) },
     );
   }
 
-  return { events, landmarks, label: 'Sinus rhythm' };
+  return {
+    events,
+    landmarks,
+    label: block === 'none' ? 'Sinus rhythm' : `Sinus rhythm · ${block}`,
+    block: block === 'none' ? undefined : block,
+  };
 }
 
 /** Natural mean frontal QRS axis (deg) from the area-weighted QRS events. */
@@ -227,7 +309,7 @@ function naturalQrsAxis(events: WaveEvent[]): number {
   let x = 0;
   let y = 0;
   for (const e of events) {
-    if (e.id !== 'septal' && e.id !== 'R' && e.id !== 'S') continue;
+    if (e.id === 'P' || e.id === 'T') continue; // depolarisation events only
     const area = e.magnitude * e.sigmaMs * SQRT_2PI;
     x += area * e.direction.x;
     y += area * e.direction.y;
