@@ -65,6 +65,8 @@ export interface SinusParams {
   atrial: AtrialEnlargement;
   /** Intraventricular conduction block (Tier-2). */
   conductionBlock: ConductionBlock;
+  /** Ventricular pre-excitation / WPW (0 = none .. 1 = maximal delta). */
+  preExcitation: number;
 }
 
 export const DEFAULT_SINUS: SinusParams = {
@@ -81,6 +83,7 @@ export const DEFAULT_SINUS: SinusParams = {
   lvStrain: false,
   atrial: 'none',
   conductionBlock: 'none',
+  preExcitation: 0,
 };
 
 // Base (normal) directions — the Phase-0 ground truth.
@@ -137,9 +140,13 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
   // Fascicular blocks set the frontal axis (deg).
   const blockAxis = hasLAFB ? -55 : hasLPFB ? 110 : undefined;
 
+  // Pre-excitation (WPW): the accessory pathway reaches the ventricle early,
+  // shortening PR and adding a slurred delta wave that widens the QRS.
+  const wpw = clamp(p.preExcitation, 0, 1);
+
   // Effective timing
-  const prMs = p.prMs + prK;
-  const qrsMs = blockQrs || p.qrsMs * qrsK;
+  const prMs = p.prMs + prK - wpw * 70;
+  const qrsMs = (blockQrs || p.qrsMs * qrsK) + wpw * 42;
 
   const rrMs = 60000 / p.rateBpm;
   const rrSec = rrMs / 1000;
@@ -276,6 +283,18 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
     });
   }
 
+  if (wpw > 0) {
+    // Delta wave: a broad, slurred initial force (pre-excited myocardium
+    // depolarising slowly, cell-to-cell), fused with the normal QRS.
+    events.push({
+      id: 'delta',
+      centerMs: qrsOnset + 0.16 * qrsMs,
+      sigmaMs: 0.22 * qrsMs,
+      magnitude: 0.5 * wpw,
+      direction: unit({ x: 0.35, y: 0.45, z: 0.2 }),
+    });
+  }
+
   // --- Axis rotation (applied to all depolarisation events) ---
   // A fascicular block sets the axis; otherwise LVH biases it left and an
   // explicit target overrides.
@@ -295,11 +314,19 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
     );
   }
 
+  const label =
+    block !== 'none'
+      ? `Sinus rhythm · ${block}`
+      : wpw > 0
+        ? 'Sinus rhythm · WPW pre-excitation'
+        : 'Sinus rhythm';
+
   return {
     events,
     landmarks,
-    label: block === 'none' ? 'Sinus rhythm' : `Sinus rhythm · ${block}`,
+    label,
     block: block === 'none' ? undefined : block,
+    preExcited: wpw > 0 ? true : undefined,
   };
 }
 

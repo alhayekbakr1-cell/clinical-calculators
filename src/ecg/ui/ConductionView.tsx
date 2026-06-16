@@ -42,13 +42,16 @@ function wavefront(state: ConductionState): { x: number; y: number } | null {
 }
 
 const BLOCK = "#ef4444";
+const ACCESSORY = "#22d3ee";
 
 export function ConductionView({
   state,
   block,
+  preExcited,
 }: {
   state: ConductionState;
   block?: string;
+  preExcited?: boolean;
 }) {
   const on = (id: string) => state.active.includes(id);
   const repol = state.phase === "repolarization";
@@ -202,6 +205,28 @@ export function ConductionView({
       {/* block "X" markers */}
       {rbbBlocked && <BlockX x={86} y={176} />}
       {lbbBlocked && <BlockX x={114} y={176} />}
+
+      {/* accessory pathway (bundle of Kent) — WPW pre-excitation */}
+      {preExcited && (
+        <>
+          <path
+            d="M 150 102 C 162 120 162 150 150 166"
+            fill="none"
+            stroke={ACCESSORY}
+            strokeWidth={3}
+            filter={
+              state.phase === "avDelay" ||
+              state.phase === "hisPurkinje" ||
+              state.phase === "ventricular"
+                ? "url(#glow)"
+                : undefined
+            }
+          />
+          <text x={164} y={138} fill="#67e8f9" fontSize={8} fontWeight={700}>
+            Kent
+          </text>
+        </>
+      )}
 
       {/* Purkinje fans */}
       {on("purkinje") &&

@@ -213,6 +213,23 @@ export function ParameterLab({
           ))}
         </select>
       </Field>
+
+      <Field
+        label="Pre-excitation (WPW)"
+        value={params.preExcitation > 0 ? `${Math.round(params.preExcitation * 100)}%` : "off"}
+        hint={params.preExcitation > 0 ? "Short PR + delta wave" : undefined}
+        hintTone="warn"
+      >
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          value={params.preExcitation}
+          onChange={(e) => onChange({ preExcitation: Number(e.target.value) })}
+          className="w-full accent-cyan-500"
+        />
+      </Field>
     </div>
   );
 }

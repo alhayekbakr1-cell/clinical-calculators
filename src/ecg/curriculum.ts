@@ -17,6 +17,7 @@ export type LabParams = {
   lvStrain: boolean;
   atrial: SinusParams['atrial'];
   conductionBlock: SinusParams['conductionBlock'];
+  preExcitation: number;
 };
 
 export const NORMAL_PARAMS: LabParams = {
@@ -28,6 +29,7 @@ export const NORMAL_PARAMS: LabParams = {
   lvStrain: false,
   atrial: 'none',
   conductionBlock: 'none',
+  preExcitation: 0,
 };
 
 export interface Module {
@@ -154,5 +156,13 @@ export const TIER2: Module[] = [
     short: 'RBBB + fascicular block',
     note: 'RBBB plus a fascicular block: the QRS shows the RBBB pattern (rSR′ in V1) while the frontal axis is driven by the fascicle that is out — left axis with RBBB + LAFB, right axis with RBBB + LPFB. With a long PR (“trifascicular” pattern) conduction is precarious.',
     preset: { ...NORMAL_PARAMS, conductionBlock: 'RBBB+LAFB' },
+  },
+  {
+    id: 'wpw',
+    tier: 2,
+    title: 'Pre-excitation (WPW)',
+    short: 'Short PR + delta wave',
+    note: 'An accessory pathway (bundle of Kent) bypasses the AV node and pre-excites the ventricle, so the PR is short (<120 ms) and the QRS begins with a slurred delta wave that widens it — a fusion of pathway and normal conduction. Watch the Kent bundle (cyan) carry the impulse to the ventricle ahead of the His. WPW + AF can be dangerous (rapid pathway conduction); avoid AV-nodal blockers.',
+    preset: { ...NORMAL_PARAMS, preExcitation: 0.85 },
   },
 ];

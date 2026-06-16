@@ -64,6 +64,7 @@ export default function EcgConsole() {
         lvStrain: params.lvStrain,
         atrial: params.atrial,
         conductionBlock: params.conductionBlock,
+        preExcitation: params.preExcitation,
       }),
     [params],
   );
@@ -154,7 +155,7 @@ export default function EcgConsole() {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
             <Card title="Conduction" subtitle={conduction.label}>
               <div className="aspect-[5/6] max-h-[320px] mx-auto">
-                <ConductionView state={conduction} block={model.block} />
+                <ConductionView state={conduction} block={model.block} preExcited={model.preExcited} />
               </div>
             </Card>
             <Card title="Axis vector" subtitle="Hexaxial · live projection per lead">

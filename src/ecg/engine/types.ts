@@ -51,6 +51,10 @@ export interface CardiacModel {
   label: string;
   /** Conduction block in effect (for the conduction view), e.g. 'RBBB'. */
   block?: string;
+  /** Ventricular pre-excitation (WPW) active — for the conduction view. */
+  preExcited?: boolean;
+  /** Active STEMI territory (for annotations), e.g. 'inferior'. */
+  stemi?: string;
 }
 
 /** Conduction-system phase, derived from the same timeline. */

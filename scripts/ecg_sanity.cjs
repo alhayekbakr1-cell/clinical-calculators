@@ -140,6 +140,13 @@ check('LPFB: right axis deviation (>= 100)', E.measure(E.buildNormalSinus({ cond
 const bif = E.buildNormalSinus({ conductionBlock: 'RBBB+LAFB' });
 check('RBBB+LAFB: wide QRS and left axis', E.measure(bif).qrsMs >= 120 && E.measure(bif).frontalAxisDeg <= -45, `${E.measure(bif).qrsMs} ms · ${E.measure(bif).frontalAxisDeg} deg`);
 
+// WPW pre-excitation: short PR, wide QRS with a delta wave
+const wpw = E.buildNormalSinus({ preExcitation: 0.85 });
+const wpwM = E.measure(wpw);
+check('WPW: short PR (< 120 ms)', wpwM.prMs < 120, `${wpwM.prMs} ms`);
+check('WPW: QRS widened by delta (> 110 ms)', wpwM.qrsMs > 110, `${wpwM.qrsMs} ms`);
+check('WPW: delta event present + preExcited tag', wpw.events.some((e) => e.id === 'delta') && wpw.preExcited === true, `${wpw.preExcited}`);
+
 // Regression: normal unchanged
 check('Regression: default still axis 54, QRS 92, QTc 400', m.frontalAxisDeg === 54 && m.qrsMs === 92 && m.qtcMs === 400);
 
