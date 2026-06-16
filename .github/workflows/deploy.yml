@@ -28,8 +28,10 @@ jobs:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v4
-        with:
-          static_site_generator: next
+        # NOTE: do NOT set `static_site_generator: next` — it injects a generated
+        # next.config.js that overrides ours and drops `output: 'export'`, so no
+        # out/ is produced. We configure export + basePath in next.config.ts and
+        # only consume this step's base_path output below.
       - name: Install dependencies
         run: npm ci
       - name: Build with Next.js
