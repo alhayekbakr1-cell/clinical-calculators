@@ -78,5 +78,41 @@ check('Ventricular mid-QRS', phaseAt((model.landmarks.qrsOnset + model.landmarks
 check('Repolarization during T', phaseAt((model.landmarks.tOnset + model.landmarks.tEnd) / 2) === 'repolarization');
 check('Diastole after T', phaseAt(tDiastole) === 'diastole');
 
+console.log('\n--- Phase 2: morphology transforms ---');
+// Axis rotation
+const lad = E.buildNormalSinus({ qrsAxisDeg: -30 });
+const ladM = E.measure(lad);
+check('Axis target -30 honored (+/-3)', Math.abs(ladM.frontalAxisDeg - -30) <= 3, `${ladM.frontalAxisDeg} deg`);
+// On left axis deviation, aVF net QRS turns negative; compare QRS peak polarity.
+const ladPk = E.qrsPeakAmplitudes(lad);
+check('LAD: aVF becomes predominantly negative', ladPk.aVF.s > ladPk.aVF.r, `R ${ladPk.aVF.r.toFixed(2)} vs S ${ladPk.aVF.s.toFixed(2)}`);
+const rad = E.measure(E.buildNormalSinus({ qrsAxisDeg: 120 }));
+check('Axis target +120 honored (+/-3)', Math.abs(rad.frontalAxisDeg - 120) <= 3, `${rad.frontalAxisDeg} deg`);
+
+// Hyperkalemia (sample at the true T-peak = the T event center)
+const tAt = (mdl) => E.leadsAt(mdl, mdl.events.find((e) => e.id === 'T').centerMs).II;
+const hyperK = E.buildNormalSinus({ potassiumMmol: 7.5 });
+const hyperKsevere = E.buildNormalSinus({ potassiumMmol: 8.5 });
+check('Hyperkalemia peaks the T (taller in II)', tAt(hyperK) > tAt(model) * 1.3, `${tAt(model).toFixed(2)} -> ${tAt(hyperK).toFixed(2)} mV`);
+const pAmp = (mdl) => E.leadsAt(mdl, mdl.landmarks.pOnset + (mdl.landmarks.pEnd - mdl.landmarks.pOnset) / 2).II;
+check('Hyperkalemia flattens the P', pAmp(hyperK) < pAmp(model) * 0.7, `${pAmp(model).toFixed(3)} -> ${pAmp(hyperK).toFixed(3)} mV`);
+check('Severe hyperkalemia widens QRS', E.measure(hyperKsevere).qrsMs > E.measure(model).qrsMs + 20, `${E.measure(model).qrsMs} -> ${E.measure(hyperKsevere).qrsMs} ms`);
+
+// LVH
+const slNormal = E.sokolowLyonMv(model);
+const lvh = E.buildNormalSinus({ lvh: 1, lvStrain: true });
+const slLvh = E.sokolowLyonMv(lvh);
+check('LVH raises Sokolow-Lyon voltage', slLvh > slNormal * 1.3, `${slNormal.toFixed(2)} -> ${slLvh.toFixed(2)} mV`);
+check('Severe LVH meets Sokolow-Lyon (>=3.5 mV)', slLvh >= 3.5, `${slLvh.toFixed(2)} mV`);
+
+// Atrial enlargement
+const rae = E.buildNormalSinus({ atrial: 'RAE' });
+check('RAE: taller P in II', pAmp(rae) > pAmp(model) * 1.3, `${pAmp(model).toFixed(3)} -> ${pAmp(rae).toFixed(3)} mV`);
+const lae = E.buildNormalSinus({ atrial: 'LAE' });
+check('LAE: broader P (duration up)', E.measure(lae).pDurationMs > E.measure(model).pDurationMs + 20, `${E.measure(model).pDurationMs} -> ${E.measure(lae).pDurationMs} ms`);
+
+// Regression: normal unchanged
+check('Regression: default still axis 54, QRS 92, QTc 400', m.frontalAxisDeg === 54 && m.qrsMs === 92 && m.qtcMs === 400);
+
 console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : failures + ' CHECK(S) FAILED'}`);
 process.exit(failures === 0 ? 0 : 1);

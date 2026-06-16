@@ -9,6 +9,7 @@
 
 import {
   DOWER_PRECORDIAL,
+  LEAD_ORDER,
   LIMB_LEAD_ANGLES_DEG,
   type LeadName,
   type LimbLeadName,
@@ -81,6 +82,32 @@ export function sampleLead(
     out[i] = projectToLeads(heartVectorAt(model, t))[lead];
   }
   return out;
+}
+
+/** Per-lead peak R (max positive) and S (max negative depth) during the QRS, mV. */
+export function qrsPeakAmplitudes(
+  model: CardiacModel,
+): Record<LeadName, { r: number; s: number }> {
+  const out = {} as Record<LeadName, { r: number; s: number }>;
+  for (const lead of LEAD_ORDER) out[lead] = { r: 0, s: 0 };
+  const { qrsOnset, qrsEnd } = model.landmarks;
+  for (let t = qrsOnset; t <= qrsEnd; t += 1) {
+    const v = projectToLeads(heartVectorAt(model, t));
+    for (const lead of LEAD_ORDER) {
+      if (v[lead] > out[lead].r) out[lead].r = v[lead];
+      if (-v[lead] > out[lead].s) out[lead].s = -v[lead];
+    }
+  }
+  return out;
+}
+
+/**
+ * Sokolow-Lyon voltage index for LVH (mV): S in V1 + the taller of R in V5/V6.
+ * LVH is suggested at >= 3.5 mV (35 mm). Sokolow & Lyon, Am Heart J 1949.
+ */
+export function sokolowLyonMv(model: CardiacModel): number {
+  const a = qrsPeakAmplitudes(model);
+  return a.V1.s + Math.max(a.V5.r, a.V6.r);
 }
 
 /** Derived interval / axis read-outs. All authoritative from landmarks. */
