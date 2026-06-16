@@ -24,6 +24,7 @@ const LABELS: Record<ConductionPhaseId, string> = {
   saFire: 'SA node fires',
   atrial: 'Atrial depolarization',
   avDelay: 'AV nodal delay',
+  avBlocked: 'AV block — beat dropped',
   hisPurkinje: 'His-Purkinje conduction',
   ventricular: 'Ventricular depolarization',
   plateau: 'Ventricular plateau (ST)',

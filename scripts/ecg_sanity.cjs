@@ -114,5 +114,37 @@ check('LAE: broader P (duration up)', E.measure(lae).pDurationMs > E.measure(mod
 // Regression: normal unchanged
 check('Regression: default still axis 54, QRS 92, QTc 400', m.frontalAxisDeg === 54 && m.qrsMs === 92 && m.qtcMs === 400);
 
+console.log('\n--- Phase 2 (rhythm): AV conduction / dropped beats ---');
+// Wenckebach 4:3 — over a group of 4 P's, 3 conduct (increasing PR) and 1 drops.
+const wb = E.makeRhythm({ ...E.DEFAULT_RHYTHM, mode: 'wenckebach', atrialRateBpm: 75, dropRatio: 4 });
+const wbMarks = E.pMarkers(wb, 0, wb.ppMs * 7 - 1); // first 8 P's (indices 0..7)
+const wbConducted = wbMarks.filter((mk) => mk.conducts).length;
+const wbDropped = wbMarks.filter((mk) => !mk.conducts).length;
+check('Wenckebach 4:3 — 6 conduct / 2 drop over 8 P', wbConducted === 6 && wbDropped === 2, `conduct ${wbConducted} drop ${wbDropped}`);
+check('Wenckebach ventricular rate < atrial', E.ventricularRate(wb.params) < 75, `${E.ventricularRate(wb.params)} bpm`);
+// The dropped beat shows a blocked AV node in the conduction view.
+const dropIdx = 3; // 4th P (index 3) is dropped
+const dropT = dropIdx * wb.ppMs + wb.templates.pDur + 30; // just after that P, where QRS would be
+check('Wenckebach: blocked AV node at the dropped beat', E.conductionAtAbs(wb, dropT).active.includes('avBlock'), E.conductionAtAbs(wb, dropT).phase);
+
+// Mobitz II 3:2 — constant PR, every 3rd P dropped.
+const m2 = E.makeRhythm({ ...E.DEFAULT_RHYTHM, mode: 'mobitz2', atrialRateBpm: 80, dropRatio: 3 });
+const m2Marks = E.pMarkers(m2, 0, m2.ppMs * 5 - 1); // 6 P's (indices 0..5)
+check('Mobitz II 3:2 — 4 conduct / 2 drop over 6 P', m2Marks.filter((x) => x.conducts).length === 4, `${m2Marks.filter((x) => x.conducts).length} conduct`);
+
+// Complete block — no P conducts; ventricular = escape rate; rates independent.
+const cb = E.makeRhythm({ ...E.DEFAULT_RHYTHM, mode: 'complete', atrialRateBpm: 90, escapeRateBpm: 38 });
+check('Complete block: no P conducts (dissociation)', E.pMarkers(cb, 0, cb.ppMs * 5).every((x) => !x.conducts));
+check('Complete block: ventricular rate = escape rate', E.ventricularRate(cb.params) === 38, `${E.ventricularRate(cb.params)} bpm`);
+// Over a scan, the AV node is shown blocked (in gaps) while the ventricles
+// fire independently (escape QRS present) — i.e. dissociation.
+let cbBlock = false, cbVent = false;
+for (let t = 0; t < cb.ppMs * 8; t += 8) {
+  const c = E.conductionAtAbs(cb, t);
+  if (c.active.includes('avBlock')) cbBlock = true;
+  if (c.phase === 'ventricular') cbVent = true;
+}
+check('Complete block: AV blocked + independent ventricular escape', cbBlock && cbVent, `block ${cbBlock} vent ${cbVent}`);
+
 console.log(`\n${failures === 0 ? 'ALL CHECKS PASSED' : failures + ' CHECK(S) FAILED'}`);
 process.exit(failures === 0 ? 0 : 1);

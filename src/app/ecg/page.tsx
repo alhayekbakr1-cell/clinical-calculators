@@ -22,6 +22,7 @@ import { ConductionView } from "@/ecg/ui/ConductionView";
 import { VectorView } from "@/ecg/ui/VectorView";
 import { TracingView } from "@/ecg/ui/TracingView";
 import { ParameterLab } from "@/ecg/ui/ParameterLab";
+import { RhythmLab } from "@/ecg/ui/RhythmLab";
 
 const SPEEDS = [0.25, 0.5, 1] as const;
 
@@ -196,6 +197,13 @@ export default function EcgConsole() {
             ))}
           </div>
           <p className="text-[13px] text-slate-300 leading-relaxed mt-2 max-w-4xl">{note}</p>
+        </Card>
+      </div>
+
+      {/* ---- Tier-2: AV conduction / dropped beats ---- */}
+      <div className="mt-3 scroll-mt-4" id="rhythm">
+        <Card title="Tier 2 — Rhythm lab · AV conduction" subtitle="Decoupled atria and ventricles: watch the dropped beat">
+          <RhythmLab />
         </Card>
       </div>
 

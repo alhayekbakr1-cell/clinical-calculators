@@ -41,10 +41,13 @@ function wavefront(state: ConductionState): { x: number; y: number } | null {
   }
 }
 
+const BLOCK = "#ef4444";
+
 export function ConductionView({ state }: { state: ConductionState }) {
   const on = (id: string) => state.active.includes(id);
   const repol = state.phase === "repolarization";
   const plateau = state.phase === "plateau";
+  const avBlocked = on("avBlock");
 
   const atriaFill = on("ra") || on("la") ? DEPOL : "#1f2937";
   const ventFill = repol ? REPOL : on("lv") || on("rv") ? DEPOL : plateau ? DEPOL_DIM : "#1f2937";
@@ -136,9 +139,19 @@ export function ConductionView({ state }: { state: ConductionState }) {
         cy={PT.av.y}
         rx={8}
         ry={5}
-        fill={on("av") ? SPARK : "#64748b"}
-        filter={on("av") ? "url(#glow)" : undefined}
+        fill={avBlocked ? BLOCK : on("av") ? SPARK : "#64748b"}
+        filter={on("av") || avBlocked ? "url(#glow)" : undefined}
       />
+      {avBlocked && (
+        <line
+          x1={PT.av.x - 9}
+          y1={PT.av.y + 5}
+          x2={PT.av.x + 9}
+          y2={PT.av.y - 5}
+          stroke="#fee2e2"
+          strokeWidth={2}
+        />
+      )}
       <text x={PT.av.x + 11} y={PT.av.y + 2} fill="#94a3b8" fontSize={8} fontWeight={700}>AV</text>
 
       {/* His bundle */}

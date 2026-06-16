@@ -56,6 +56,7 @@ export type ConductionPhaseId =
   | 'saFire'
   | 'atrial'
   | 'avDelay'
+  | 'avBlocked'
   | 'hisPurkinje'
   | 'ventricular'
   | 'plateau'

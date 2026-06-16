@@ -10,3 +10,4 @@ export * from './normalSinus';
 export * from './vector';
 export * from './leads';
 export * from './conduction';
+export * from './rhythm';

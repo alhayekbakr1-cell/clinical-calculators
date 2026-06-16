@@ -50,11 +50,14 @@ coordinates, evaluated on one deterministic clock:
 ```
 engine/            framework-agnostic, pure TS — the source of truth
   constants.ts     calibration, hexaxial angles, Dower matrix, normal ranges
-  normalSinus.ts   the normal-sinus parameter set (events + landmarks)
+  normalSinus.ts   the cycle builder + Tier-1 morphology (axis, K+, LVH, atria)
   vector.ts        m(t) evaluation + QRS area vector
-  leads.ts         projection to 12 leads + interval/axis measurements
+  leads.ts         projection to 12 leads + intervals/axis + Sokolow-Lyon
   conduction.ts    conduction-system phase from the same timeline
-ui/                React/SVG renderers (Conduction, Vector, Tracing, EcgPaper)
+  rhythm.ts        multi-beat AV-conduction timeline (Tier-2 blocks)
+curriculum.ts      Tier-1 module definitions (focus presets + teaching notes)
+ui/                React/SVG renderers (Conduction, Vector, Tracing, EcgPaper,
+                   ParameterLab, RhythmLab, RhythmStrip)
 useCardiacClock.ts the single shared rAF clock
 ```
 
@@ -72,5 +75,9 @@ isoelectric diastole, and the conduction phase mapping.
 
 - **Phase 0 (done)** — vector engine + single-lead projection on normal sinus.
 - **Phase 1 (done)** — all three views synchronized on sinus.
-- **Phase 2** — full parameter sliders + Tier-1 modules.
-- **Phase 3** — real-data case mode (PhysioNet), Tier-2, progression in Supabase.
+- **Phase 2 (done)** — parameter lab (axis, hyperkalaemia, LVH, atrial
+  enlargement) + Tier-1 modules, plus a Tier-2 AV-conduction rhythm lab
+  (1°, Mobitz I/II, complete block) on the multi-beat timeline.
+- **Phase 3** — real-data case mode (PhysioNet), more Tier-2 (bundle/fascicular
+  blocks, pre-excitation, reentry, wide-complex tachycardia, ischaemia,
+  channelopathies, paced rhythms), progression/persistence in Supabase.
