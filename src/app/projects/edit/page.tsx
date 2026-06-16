@@ -7,9 +7,17 @@ import PHIWarning from "@/components/PHIWarning";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import DeleteProjectButton from "@/components/DeleteProjectButton";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 export default function EditProjectPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
+            <EditProjectPageInner />
+        </Suspense>
+    );
+}
+
+function EditProjectPageInner() {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
 

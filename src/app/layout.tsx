@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
-
-const inter = Inter({ subsets: ["latin"] });
+import SiteFooter from "@/components/SiteFooter";
 
 export const metadata: Metadata = {
   title: "QI Project Tracker | AdventHealth",
@@ -17,17 +15,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-slate-50 min-h-screen flex flex-col`}>
+      <body className="font-sans bg-slate-50 min-h-screen flex flex-col">
         <AppShell>
           {children}
         </AppShell>
-        <footer className="py-6 border-t bg-white">
-          <div className="max-w-7xl mx-auto px-4 text-center">
-            <p className="text-sm text-slate-500">
-              IM Resident QI Project Tracker &copy; {new Date().getFullYear()}
-            </p>
-          </div>
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );
