@@ -18,6 +18,7 @@ export type LabParams = {
   atrial: SinusParams['atrial'];
   conductionBlock: SinusParams['conductionBlock'];
   preExcitation: number;
+  stemi: SinusParams['stemi'];
 };
 
 export const NORMAL_PARAMS: LabParams = {
@@ -30,6 +31,7 @@ export const NORMAL_PARAMS: LabParams = {
   atrial: 'none',
   conductionBlock: 'none',
   preExcitation: 0,
+  stemi: 'none',
 };
 
 export interface Module {
@@ -164,5 +166,29 @@ export const TIER2: Module[] = [
     short: 'Short PR + delta wave',
     note: 'An accessory pathway (bundle of Kent) bypasses the AV node and pre-excites the ventricle, so the PR is short (<120 ms) and the QRS begins with a slurred delta wave that widens it — a fusion of pathway and normal conduction. Watch the Kent bundle (cyan) carry the impulse to the ventricle ahead of the His. WPW + AF can be dangerous (rapid pathway conduction); avoid AV-nodal blockers.',
     preset: { ...NORMAL_PARAMS, preExcitation: 0.85 },
+  },
+  {
+    id: 'stemi-inferior',
+    tier: 2,
+    title: 'Inferior STEMI',
+    short: 'ST↑ II, III, aVF',
+    note: 'An inferior injury current points down toward the inferior wall (usually RCA): ST elevation in II, III and aVF with reciprocal ST depression in aVL (and I). On the axis-vector view the heart vector swings inferiorly during the ST segment. Check a right-sided lead for RV involvement.',
+    preset: { ...NORMAL_PARAMS, stemi: 'inferior' },
+  },
+  {
+    id: 'stemi-anterior',
+    tier: 2,
+    title: 'Anterior STEMI',
+    short: 'ST↑ V2–V4',
+    note: 'A LAD occlusion injures the anterior wall: the injury current points anteriorly, elevating ST in the precordial leads (V2–V4, often V1–V5). The same one vector, projected forward onto the chest leads, lights them up — this is why the precordials localise the lesion.',
+    preset: { ...NORMAL_PARAMS, stemi: 'anterior' },
+  },
+  {
+    id: 'stemi-lateral',
+    tier: 2,
+    title: 'Lateral STEMI',
+    short: 'ST↑ I, aVL, V5–V6',
+    note: 'A lateral injury current points left toward the lateral wall (circumflex): ST elevation in I, aVL, V5 and V6, with reciprocal depression in the inferior leads. Use the territory selector to compare reciprocal patterns across walls.',
+    preset: { ...NORMAL_PARAMS, stemi: 'lateral' },
   },
 ];

@@ -43,6 +43,25 @@ export type ConductionBlock =
   | 'RBBB+LAFB'
   | 'RBBB+LPFB';
 
+export type StemiTerritory =
+  | 'none'
+  | 'inferior'
+  | 'anterior'
+  | 'lateral'
+  | 'septal'
+  | 'posterior';
+
+// "Injury current" direction toward each infarcting wall (Frank coords).
+// The ST vector projects as elevation in the facing leads and, automatically,
+// reciprocal depression in the opposite leads.
+const STEMI_DIR: Record<Exclude<StemiTerritory, 'none'>, Vec3> = {
+  inferior: { x: 0.0, y: 0.9, z: 0.3 },
+  anterior: { x: 0.1, y: 0.1, z: -0.95 },
+  lateral: { x: 0.92, y: -0.1, z: 0.0 },
+  septal: { x: -0.2, y: 0.05, z: -0.95 },
+  posterior: { x: 0.3, y: 0.2, z: 0.92 },
+};
+
 export interface SinusParams {
   rateBpm: number;
   prMs: number;
@@ -67,6 +86,8 @@ export interface SinusParams {
   conductionBlock: ConductionBlock;
   /** Ventricular pre-excitation / WPW (0 = none .. 1 = maximal delta). */
   preExcitation: number;
+  /** Acute STEMI territory (ST-segment injury current). */
+  stemi: StemiTerritory;
 }
 
 export const DEFAULT_SINUS: SinusParams = {
@@ -84,6 +105,7 @@ export const DEFAULT_SINUS: SinusParams = {
   atrial: 'none',
   conductionBlock: 'none',
   preExcitation: 0,
+  stemi: 'none',
 };
 
 // Base (normal) directions — the Phase-0 ground truth.
@@ -308,10 +330,22 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
   const delta = (targetAxis - naturalQrsAxis(events)) * DEG;
   if (Math.abs(delta) > 1e-6) {
     events = events.map((e) =>
-      e.id === 'P' || e.id === 'T'
+      e.id === 'P' || e.id === 'T' || e.id === 'st'
         ? e
         : { ...e, direction: rotateFrontal(e.direction, delta) },
     );
+  }
+
+  // --- STEMI injury current (ST-segment elevation toward the infarct wall) ---
+  if (p.stemi !== 'none') {
+    const stSpan = tEnd - qrsEnd;
+    events.push({
+      id: 'st',
+      centerMs: qrsEnd + 0.35 * stSpan,
+      sigmaMs: 0.32 * stSpan,
+      magnitude: 0.28,
+      direction: unit(STEMI_DIR[p.stemi]),
+    });
   }
 
   const label =
@@ -319,7 +353,9 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
       ? `Sinus rhythm · ${block}`
       : wpw > 0
         ? 'Sinus rhythm · WPW pre-excitation'
-        : 'Sinus rhythm';
+        : p.stemi !== 'none'
+          ? `Sinus rhythm · ${p.stemi} STEMI`
+          : 'Sinus rhythm';
 
   return {
     events,
@@ -327,6 +363,7 @@ export function buildNormalSinus(partial: Partial<SinusParams> = {}): CardiacMod
     label,
     block: block === 'none' ? undefined : block,
     preExcited: wpw > 0 ? true : undefined,
+    stemi: p.stemi === 'none' ? undefined : p.stemi,
   };
 }
 
@@ -336,7 +373,7 @@ function naturalQrsAxis(events: WaveEvent[]): number {
   let x = 0;
   let y = 0;
   for (const e of events) {
-    if (e.id === 'P' || e.id === 'T') continue; // depolarisation events only
+    if (e.id === 'P' || e.id === 'T' || e.id === 'st') continue; // QRS events only
     const area = e.magnitude * e.sigmaMs * SQRT_2PI;
     x += area * e.direction.x;
     y += area * e.direction.y;

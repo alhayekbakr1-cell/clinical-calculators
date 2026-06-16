@@ -65,6 +65,7 @@ export default function EcgConsole() {
         atrial: params.atrial,
         conductionBlock: params.conductionBlock,
         preExcitation: params.preExcitation,
+        stemi: params.stemi,
       }),
     [params],
   );

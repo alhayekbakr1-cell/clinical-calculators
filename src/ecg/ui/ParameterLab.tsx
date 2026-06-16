@@ -1,7 +1,20 @@
 "use client";
 
 import type { LabParams } from "@/ecg/curriculum";
-import type { AtrialEnlargement, ConductionBlock } from "@/ecg/engine";
+import type {
+  AtrialEnlargement,
+  ConductionBlock,
+  StemiTerritory,
+} from "@/ecg/engine";
+
+const STEMI_OPTS: { id: StemiTerritory; label: string }[] = [
+  { id: "none", label: "None" },
+  { id: "inferior", label: "Inferior (II, III, aVF)" },
+  { id: "anterior", label: "Anterior (V2–V4)" },
+  { id: "lateral", label: "Lateral (I, aVL, V5–V6)" },
+  { id: "septal", label: "Septal (V1–V2)" },
+  { id: "posterior", label: "Posterior (V7–V9)" },
+];
 
 const BLOCK_OPTS: { id: ConductionBlock; label: string }[] = [
   { id: "none", label: "None" },
@@ -229,6 +242,24 @@ export function ParameterLab({
           onChange={(e) => onChange({ preExcitation: Number(e.target.value) })}
           className="w-full accent-cyan-500"
         />
+      </Field>
+
+      <Field
+        label="Acute STEMI"
+        hint={params.stemi !== "none" ? "ST elevation + reciprocal change" : undefined}
+        hintTone="warn"
+      >
+        <select
+          value={params.stemi}
+          onChange={(e) => onChange({ stemi: e.target.value as StemiTerritory })}
+          className="w-full bg-slate-800 text-slate-200 text-xs font-semibold rounded px-2 py-1.5 outline-none ring-1 ring-slate-700 focus:ring-rose-500"
+        >
+          {STEMI_OPTS.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.label}
+            </option>
+          ))}
+        </select>
       </Field>
     </div>
   );

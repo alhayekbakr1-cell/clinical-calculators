@@ -147,6 +147,20 @@ check('WPW: short PR (< 120 ms)', wpwM.prMs < 120, `${wpwM.prMs} ms`);
 check('WPW: QRS widened by delta (> 110 ms)', wpwM.qrsMs > 110, `${wpwM.qrsMs} ms`);
 check('WPW: delta event present + preExcited tag', wpw.events.some((e) => e.id === 'delta') && wpw.preExcited === true, `${wpw.preExcited}`);
 
+// STEMI: ST elevation in facing leads, reciprocal depression opposite
+const stT = model.landmarks.qrsEnd + 0.35 * (model.landmarks.tEnd - model.landmarks.qrsEnd);
+const stLead = (mdl, lead) => E.leadsAt(mdl, stT)[lead];
+const dST = (mdl, lead) => stLead(mdl, lead) - stLead(model, lead);
+const inf = E.buildNormalSinus({ stemi: 'inferior' });
+check('Inferior STEMI: ST elevation in II/III/aVF', dST(inf, 'II') > 0.1 && dST(inf, 'III') > 0.1 && dST(inf, 'aVF') > 0.1, `II +${dST(inf, 'II').toFixed(2)}`);
+check('Inferior STEMI: reciprocal ST depression in aVL', dST(inf, 'aVL') < -0.03, `aVL ${dST(inf, 'aVL').toFixed(2)}`);
+const ant = E.buildNormalSinus({ stemi: 'anterior' });
+check('Anterior STEMI: ST elevation V2–V4', dST(ant, 'V2') > 0.1 && dST(ant, 'V3') > 0.1 && dST(ant, 'V4') > 0.1, `V3 +${dST(ant, 'V3').toFixed(2)}`);
+const lat = E.buildNormalSinus({ stemi: 'lateral' });
+check('Lateral STEMI: ST elevation I/aVL/V6', dST(lat, 'I') > 0.08 && dST(lat, 'V6') > 0.08, `I +${dST(lat, 'I').toFixed(2)}`);
+check('STEMI: territory tag carried', inf.stemi === 'inferior', `${inf.stemi}`);
+check('STEMI: injury vector does not shift the QRS axis', E.measure(inf).frontalAxisDeg === m.frontalAxisDeg, `${E.measure(inf).frontalAxisDeg} vs ${m.frontalAxisDeg}`);
+
 // Regression: normal unchanged
 check('Regression: default still axis 54, QRS 92, QTc 400', m.frontalAxisDeg === 54 && m.qrsMs === 92 && m.qtcMs === 400);
 
