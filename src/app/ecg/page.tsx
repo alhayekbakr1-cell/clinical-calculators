@@ -23,6 +23,7 @@ import { ConductionView } from "@/ecg/ui/ConductionView";
 import { VectorView } from "@/ecg/ui/VectorView";
 import { TracingView } from "@/ecg/ui/TracingView";
 import { ParameterLab } from "@/ecg/ui/ParameterLab";
+import { WctLab } from "@/ecg/ui/WctLab";
 import { RhythmLab } from "@/ecg/ui/RhythmLab";
 
 const SPEEDS = [0.25, 0.5, 1] as const;
@@ -230,6 +231,13 @@ export default function EcgConsole() {
       <div className="mt-3 scroll-mt-4" id="rhythm">
         <Card title="Tier 2 — Rhythm lab · AV conduction" subtitle="Decoupled atria and ventricles: watch the dropped beat">
           <RhythmLab />
+        </Card>
+      </div>
+
+      {/* ---- Tier-2: wide-complex tachycardia (VT vs SVT) ---- */}
+      <div className="mt-3 scroll-mt-4" id="wct">
+        <Card title="Tier 2 — Wide-complex tachycardia · VT vs SVT" subtitle="Same fast wide-QRS rhythm; the atrioventricular relationship tells them apart">
+          <WctLab />
         </Card>
       </div>
 

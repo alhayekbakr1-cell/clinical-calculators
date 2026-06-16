@@ -39,10 +39,12 @@ export interface RhythmParams {
   wenckebachStepMs: number;
   /** Group size N: conduct N-1 P waves, drop the Nth (Wenckebach / Mobitz II). */
   dropRatio: number;
-  /** Ventricular escape rate for complete block. */
+  /** Ventricular escape rate for complete block (or the VT focus rate). */
   escapeRateBpm: number;
   /** Wide (ventricular) vs narrow (junctional) escape complexes. */
   escapeWide: boolean;
+  /** Conducted beats are wide too (BBB aberrancy — SVT with aberration). */
+  conductedWide?: boolean;
 }
 
 export const DEFAULT_RHYTHM: RhythmParams = {
@@ -164,7 +166,8 @@ function ventOnsetsNear(
     for (let i = ic - 3; i <= ic + 3; i++) {
       if (i < 0) continue;
       const av = avFor(i, R.params);
-      if (av.conducts) out.push({ onset: i * R.ppMs + av.prMs, wide: false });
+      if (av.conducts)
+        out.push({ onset: i * R.ppMs + av.prMs, wide: !!R.params.conductedWide });
     }
   }
   return out.filter((v) => Math.abs(v.onset + 40 - t) < span);

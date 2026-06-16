@@ -161,6 +161,14 @@ check('Lateral STEMI: ST elevation I/aVL/V6', dST(lat, 'I') > 0.08 && dST(lat, '
 check('STEMI: territory tag carried', inf.stemi === 'inferior', `${inf.stemi}`);
 check('STEMI: injury vector does not shift the QRS axis', E.measure(inf).frontalAxisDeg === m.frontalAxisDeg, `${E.measure(inf).frontalAxisDeg} vs ${m.frontalAxisDeg}`);
 
+// Wide-complex tachycardia: VT (AV dissociation) vs SVT-aberrancy (1:1)
+const vtR = E.makeRhythm({ mode: 'complete', atrialRateBpm: 78, basePrMs: 160, wenckebachStepMs: 0, dropRatio: 4, escapeRateBpm: 160, escapeWide: true, conductedWide: false });
+const svtR = E.makeRhythm({ mode: 'normal', atrialRateBpm: 160, basePrMs: 140, wenckebachStepMs: 0, dropRatio: 4, escapeRateBpm: 40, escapeWide: false, conductedWide: true });
+check('VT: fast ventricular focus (160 bpm)', E.ventricularRate(vtR.params) === 160, `${E.ventricularRate(vtR.params)} bpm`);
+check('VT: AV dissociation (no P conducts)', E.pMarkers(vtR, 0, 4000).every((p) => !p.conducts));
+check('SVT: 1:1 conduction (every P conducts)', E.pMarkers(svtR, 0, 4000).every((p) => p.conducts));
+check('SVT: ventricular rate = atrial rate', E.ventricularRate(svtR.params) === 160, `${E.ventricularRate(svtR.params)} bpm`);
+
 // Regression: normal unchanged
 check('Regression: default still axis 54, QRS 92, QTc 400', m.frontalAxisDeg === 54 && m.qrsMs === 92 && m.qtcMs === 400);
 
