@@ -21,9 +21,17 @@ import {
 import Link from "next/link";
 import { format } from "date-fns";
 import MetricEntryForm from "@/components/MetricEntryForm";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 export default function ProjectDetailPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
+            <ProjectDetailPageInner />
+        </Suspense>
+    );
+}
+
+function ProjectDetailPageInner() {
     const searchParams = useSearchParams();
     const id = searchParams.get("id");
 

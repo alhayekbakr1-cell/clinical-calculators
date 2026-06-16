@@ -9,9 +9,17 @@ import Link from "next/link";
 import { format } from "date-fns";
 import ExportCSVButton from "@/components/ExportCSVButton";
 import ProjectFilters from "@/components/ProjectFilters";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 export default function ProjectsPage() {
+    return (
+        <Suspense fallback={<div className="flex justify-center items-center min-h-screen">Loading...</div>}>
+            <ProjectsPageInner />
+        </Suspense>
+    );
+}
+
+function ProjectsPageInner() {
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const router = useRouter();
