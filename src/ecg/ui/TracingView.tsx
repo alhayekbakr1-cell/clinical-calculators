@@ -118,7 +118,7 @@ export function TracingView({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="grid grid-cols-4 gap-x-2 gap-y-1.5">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-2 gap-y-1.5">
         {LEAD_GRID.flatMap((row) =>
           row.map((lead) => (
             <LeadPanel

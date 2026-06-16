@@ -97,7 +97,7 @@ export default function EcgConsole() {
               synchronized views. Move a parameter — everything reacts.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-slate-900/60 ring-1 ring-slate-800 rounded-xl px-4 py-2">
+          <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible items-center gap-x-4 gap-y-2 bg-slate-900/60 ring-1 ring-slate-800 rounded-xl px-4 py-2 w-full sm:w-auto">
             <Readout label="Rate" value={measurements.rateBpm} unit="bpm" ok={inRange(measurements.rateBpm, NORMAL_RANGES.rateBpm)} />
             <Readout label="PR" value={measurements.prMs} unit="ms" ok={inRange(measurements.prMs, NORMAL_RANGES.prMs)} note={measurements.prMs > NORMAL_RANGES.prMs[1] ? "1° block" : undefined} />
             <Readout label="QRS" value={measurements.qrsMs} unit="ms" ok={measurements.qrsMs < 120} note={measurements.qrsMs >= 120 ? "wide" : undefined} />
@@ -127,7 +127,7 @@ export default function EcgConsole() {
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-2 flex-1 min-w-[220px]">
+          <div className="flex items-center gap-2 w-full sm:flex-1 sm:w-auto sm:min-w-[220px] order-last sm:order-none">
             <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Scrub</span>
             <input
               type="range"
@@ -139,7 +139,7 @@ export default function EcgConsole() {
             />
             <span className="text-xs font-mono text-slate-400 w-16 text-right">{Math.round(tMs)} ms</span>
           </div>
-          <span className="text-xs font-bold text-amber-400 min-w-[180px] text-right">
+          <span className="text-xs font-bold text-amber-400 w-full sm:w-auto sm:min-w-[180px] sm:text-right">
             {conduction.label}
           </span>
         </div>
@@ -147,14 +147,14 @@ export default function EcgConsole() {
 
       {/* ---- Lab + views ---- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3">
-        <div className="lg:col-span-3">
+        <div className="order-2 lg:order-1 lg:col-span-3">
           <Card>
             <ParameterLab params={params} onChange={update} onReset={() => setParams(NORMAL_PARAMS)} />
           </Card>
         </div>
 
-        <div className="lg:col-span-9 flex flex-col gap-3">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-3">
+        <div className="order-1 lg:order-2 lg:col-span-9 flex flex-col gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
             <Card title="Conduction" subtitle={conduction.label}>
               <div className="aspect-[5/6] max-h-[320px] mx-auto">
                 <ConductionView state={conduction} block={model.block} preExcited={model.preExcited} />
@@ -268,7 +268,7 @@ function Readout({
   note?: string;
 }) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col shrink-0">
       <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">{label}</span>
       <span className={`text-lg font-black tabular-nums leading-none ${ok ? "text-slate-100" : "text-amber-400"}`}>
         {value}
