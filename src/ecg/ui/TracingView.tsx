@@ -35,6 +35,7 @@ function LeadPanel({
   tMs,
   rrMs,
   current,
+  showCursor,
 }: {
   lead: LeadName;
   path: string;
@@ -42,6 +43,7 @@ function LeadPanel({
   tMs: number;
   rrMs: number;
   current: number;
+  showCursor: boolean;
 }) {
   const cursorX = (tMs / rrMs) * beatWidthMm;
   const cursorY = BASE_Y - current * GAIN;
@@ -64,16 +66,20 @@ function LeadPanel({
         />
         <path d={path} fill="none" stroke="#101418" strokeWidth={0.35} />
         {/* sweep cursor */}
-        <line
-          x1={cursorX}
-          y1={0}
-          x2={cursorX}
-          y2={PANEL_H}
-          stroke="#0ea5e9"
-          strokeWidth={0.18}
-          opacity={0.9}
-        />
-        <circle cx={cursorX} cy={cursorY} r={0.55} fill="#0284c7" />
+        {showCursor && (
+          <>
+            <line
+              x1={cursorX}
+              y1={0}
+              x2={cursorX}
+              y2={PANEL_H}
+              stroke="#0ea5e9"
+              strokeWidth={0.18}
+              opacity={0.9}
+            />
+            <circle cx={cursorX} cy={cursorY} r={0.55} fill="#0284c7" />
+          </>
+        )}
       </svg>
       <span className="absolute top-1 left-1.5 text-[11px] font-bold text-slate-700 bg-white/70 px-1 rounded">
         {lead}
@@ -87,11 +93,13 @@ export function TracingView({
   tMs,
   elapsedMs,
   leads,
+  frozen = false,
 }: {
   model: CardiacModel;
   tMs: number;
   elapsedMs: number;
   leads: LeadVoltages;
+  frozen?: boolean;
 }) {
   const rrMs = model.landmarks.rrMs;
   const beatWidthMm = (rrMs / 1000) * SPEED;
@@ -112,7 +120,7 @@ export function TracingView({
 
   // Rhythm strip (Lead II), scrolling. Tile one beat and translate by elapsed.
   const stripWidthMm = 220;
-  const offsetMm = ((elapsedMs / 1000) * SPEED) % beatWidthMm;
+  const offsetMm = frozen ? 0 : ((elapsedMs / 1000) * SPEED) % beatWidthMm;
   const tileCount = Math.ceil(stripWidthMm / beatWidthMm) + 2;
   const stripBeatPath = paths.II;
 
@@ -129,6 +137,7 @@ export function TracingView({
               tMs={tMs}
               rrMs={rrMs}
               current={leads[lead]}
+              showCursor={!frozen}
             />
           )),
         )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   buildNormalSinus,
   conductionAt,
@@ -96,6 +97,12 @@ export default function EcgConsole() {
               <span className="font-mono text-slate-300">m(t)</span> · three
               synchronized views. Move a parameter — everything reacts.
             </p>
+            <Link
+              href="/ecg/cases"
+              className="inline-flex items-center gap-1 mt-1.5 text-xs font-bold text-sky-400 hover:text-sky-300"
+            >
+              Case review · interpret &amp; measure →
+            </Link>
           </div>
           <div className="flex flex-nowrap sm:flex-wrap overflow-x-auto sm:overflow-visible items-center gap-x-4 gap-y-2 bg-slate-900/60 ring-1 ring-slate-800 rounded-xl px-4 py-2 w-full sm:w-auto">
             <Readout label="Rate" value={measurements.rateBpm} unit="bpm" ok={inRange(measurements.rateBpm, NORMAL_RANGES.rateBpm)} />
